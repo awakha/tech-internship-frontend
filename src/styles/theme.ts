@@ -7,7 +7,6 @@ export const lightTheme = createTheme({
     secondary: { main: '#9c27b0' }
   },
   components: {
-    // global MUI overrides
     MuiButton: {
       styleOverrides: {
         root: { textTransform: 'none' }

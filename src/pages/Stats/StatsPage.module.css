@@ -1,0 +1,60 @@
+.container {
+  padding: 24px;
+}
+
+.title {
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.periodPaper {
+  padding: 8px;
+  margin-bottom: 24px;
+  background-color: transparent;
+}
+
+.metricCard {
+  padding: 16px;
+  min-height: 94px;
+}
+
+.chartPaper {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chartTitle {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.chartBox {
+  width: 100%;
+  height: 220px;
+}
+
+.piePaper {
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pieChartBox {
+  width: 100%;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+  padding-bottom: 16px;
+}
+
+.barPaper {
+  padding: 16px;
+}
+
+.gridSpacing {
+  margin-bottom: 16px;
+}

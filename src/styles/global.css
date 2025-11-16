@@ -5,5 +5,4 @@ html, body, #root {
   background: transparent;
 }
 
-/* Remove Vite default placeholder styles if any */
 * { box-sizing: border-box; }

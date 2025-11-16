@@ -24,7 +24,7 @@ export default function BulkActionsBar({ onRefresh }: { onRefresh?: () => void }
   };
 
   const doReject = async () => {
-    // for demo, reject with reason "Другое"
+
     for (const id of selected) {
       await axiosClient.post(`/ads/${id}/reject`, { reason: 'Другое', comment: 'Массовое отклонение' });
     }
@@ -34,7 +34,7 @@ export default function BulkActionsBar({ onRefresh }: { onRefresh?: () => void }
   };
 
   const handleExport = () => {
-    // request details for selected ads and export CSV
+
     exportAdsToCSV(selected).then((blob) => saveAs(blob, 'ads_export.csv'));
   };
 

@@ -1,6 +1,4 @@
-// src/features/stats/StatsPage.tsx
 import React, { useMemo, useState } from 'react';
-
 import {
   Box,
   Card,
@@ -25,13 +23,9 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts';
 import dayjs from 'dayjs';
-
-/* -------------------
-   Типы (согласно OpenAPI)
-   ------------------- */
+import styles from './StatsPage.module.css';
 
 type StatsSummary = {
   totalReviewed?: number;
@@ -41,11 +35,11 @@ type StatsSummary = {
   approvedPercentage?: number;
   rejectedPercentage?: number;
   requestChangesPercentage?: number;
-  averageReviewTime?: number; // seconds (integer)
+  averageReviewTime?: number;
 };
 
 type ActivityData = {
-  date: string; // YYYY-MM-DD
+  date: string;
   approved: number;
   rejected: number;
   requestChanges: number;
@@ -59,41 +53,22 @@ type DecisionsData = {
 
 type CategoriesResponse = Record<string, number>;
 
-/* -------------------
-   API helpers
-   ------------------- */
-
 const fetchSummary = async (period: string) => {
-  const { data } = await axios.get<StatsSummary>('/api/v1/stats/summary', {
-    params: { period },
-  });
+  const { data } = await axios.get<StatsSummary>('/api/v1/stats/summary', { params: { period } });
   return data;
 };
-
 const fetchActivity = async (period: string) => {
-  const { data } = await axios.get<ActivityData[]>('/api/v1/stats/chart/activity', {
-    params: { period },
-  });
+  const { data } = await axios.get<ActivityData[]>('/api/v1/stats/chart/activity', { params: { period } });
   return data;
 };
-
 const fetchDecisions = async (period: string) => {
-  const { data } = await axios.get<DecisionsData>('/api/v1/stats/chart/decisions', {
-    params: { period },
-  });
+  const { data } = await axios.get<DecisionsData>('/api/v1/stats/chart/decisions', { params: { period } });
   return data;
 };
-
 const fetchCategories = async (period: string) => {
-  const { data } = await axios.get<CategoriesResponse>('/api/v1/stats/chart/categories', {
-    params: { period },
-  });
+  const { data } = await axios.get<CategoriesResponse>('/api/v1/stats/chart/categories', { params: { period } });
   return data;
 };
-
-/* -------------------
-   Вспомогательные
-   ------------------- */
 
 const formatTime = (seconds?: number) => {
   if (seconds == null) return '-';
@@ -110,50 +85,19 @@ const COLORS = {
   muted: '#e0e0e0',
 };
 
-/* -------------------
-   Компонент
-   ------------------- */
-
 export default function StatsPage(): React.ReactElement {
   const theme = useTheme();
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('week');
 
-  // Queries
-  const summaryQuery = useQuery<StatsSummary, Error>({
-    queryKey: ['stats-summary', period],
-    queryFn: () => fetchSummary(period),
-    staleTime: 1000 * 60 * 2,
-  });
+  const summaryQuery = useQuery<StatsSummary, Error>({ queryKey: ['stats-summary', period], queryFn: () => fetchSummary(period), staleTime: 120000 });
+  const activityQuery = useQuery<ActivityData[], Error>({ queryKey: ['stats-activity', period], queryFn: () => fetchActivity(period), staleTime: 120000 });
+  const decisionsQuery = useQuery<DecisionsData, Error>({ queryKey: ['stats-decisions', period], queryFn: () => fetchDecisions(period), staleTime: 120000 });
+  const categoriesQuery = useQuery<CategoriesResponse, Error>({ queryKey: ['stats-categories', period], queryFn: () => fetchCategories(period), staleTime: 120000 });
 
-  const activityQuery = useQuery<ActivityData[], Error>({
-    queryKey: ['stats-activity', period],
-    queryFn: () => fetchActivity(period),
-    staleTime: 1000 * 60 * 2,
-  });
+  const loading = summaryQuery.isLoading || activityQuery.isLoading || decisionsQuery.isLoading || categoriesQuery.isLoading;
 
-  const decisionsQuery = useQuery<DecisionsData, Error>({
-    queryKey: ['stats-decisions', period],
-    queryFn: () => fetchDecisions(period),
-    staleTime: 1000 * 60 * 2,
-  });
-
-  const categoriesQuery = useQuery<CategoriesResponse, Error>({
-    queryKey: ['stats-categories', period],
-    queryFn: () => fetchCategories(period),
-    staleTime: 1000 * 60 * 2,
-  });
-
-  const loading =
-    summaryQuery.isLoading ||
-    activityQuery.isLoading ||
-    decisionsQuery.isLoading ||
-    categoriesQuery.isLoading;
-
-  // Prepare activity data for bar chart (group count)
   const activityChartData = useMemo(() => {
-    const arr = activityQuery.data ?? [];
-    // map to { dateLabel, total } or keep approved/rejected/requestChanges for stacked bars
-    return arr.map((d) => ({
+    return (activityQuery.data ?? []).map((d) => ({
       dateLabel: dayjs(d.date).format('DD MMM'),
       approved: d.approved ?? 0,
       rejected: d.rejected ?? 0,
@@ -162,7 +106,6 @@ export default function StatsPage(): React.ReactElement {
     }));
   }, [activityQuery.data]);
 
-  // Prepare decisions pie data
   const decisionsChartData = useMemo(() => {
     const d = decisionsQuery.data;
     if (!d) return [];
@@ -173,127 +116,56 @@ export default function StatsPage(): React.ReactElement {
     ];
   }, [decisionsQuery.data]);
 
-  // Prepare categories bar data
   const categoriesChartData = useMemo(() => {
     const obj = categoriesQuery.data ?? {};
     return Object.entries(obj).map(([category, count]) => ({ category, count }));
   }, [categoriesQuery.data]);
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
-        Статистика
-      </Typography>
+    <Box className={styles.container}>
+      <Typography variant="h5" className={styles.title}>Статистика</Typography>
 
-      {/* Period selector */}
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 1,
-              mb: 3,
-              backgroundColor: 'transparent', // прозрачный фон
-            }}
-          >
-        <Tabs
-          value={period}
-          onChange={(_, v) => setPeriod(v)}
-          textColor="primary"
-          indicatorColor="primary"
-          aria-label="period tabs"
-        >
+      <Paper variant="outlined" className={styles.periodPaper}>
+        <Tabs value={period} onChange={(_, v) => setPeriod(v)} textColor="primary" indicatorColor="primary">
           <Tab value="today" label="Сегодня" />
           <Tab value="week" label="7д" />
           <Tab value="month" label="30д" />
         </Tabs>
       </Paper>
 
-      {/* Metric cards */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ p: 2, minHeight: 94 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Проверено
-            </Typography>
-            {summaryQuery.isLoading ? (
-              <Skeleton width={90} height={36} />
-            ) : summaryQuery.isError ? (
-              <Typography color="error">—</Typography>
-            ) : (
-              <Typography variant="h5" sx={{ mt: 1 }}>
-                {summaryQuery.data?.totalReviewed ?? 0}
+      <Grid container spacing={2} className={styles.gridSpacing}>
+        {['totalReviewed', 'approvedPercentage', 'rejectedPercentage', 'averageReviewTime'].map((key, idx) => (
+          <Grid item xs={12} sm={6} md={3} key={key}>
+            <Card className={styles.metricCard}>
+              <Typography variant="subtitle2" color="text.secondary">
+                {key === 'totalReviewed' ? 'Проверено' : key === 'approvedPercentage' ? 'Одобрено' : key === 'rejectedPercentage' ? 'Отклонено' : 'Ср. время'}
               </Typography>
-            )}
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ p: 2, minHeight: 94 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Одобрено
-            </Typography>
-            {summaryQuery.isLoading ? (
-              <Skeleton width={90} height={36} />
-            ) : summaryQuery.isError ? (
-              <Typography color="error">—</Typography>
-            ) : (
-              <Typography variant="h5" sx={{ mt: 1 }}>
-                {typeof summaryQuery.data?.approvedPercentage === 'number'
-                  ? `${Math.round(summaryQuery.data!.approvedPercentage)}%`
-                  : '-'}
-              </Typography>
-            )}
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ p: 2, minHeight: 94 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Отклонено
-            </Typography>
-            {summaryQuery.isLoading ? (
-              <Skeleton width={90} height={36} />
-            ) : summaryQuery.isError ? (
-              <Typography color="error">—</Typography>
-            ) : (
-              <Typography variant="h5" sx={{ mt: 1 }}>
-                {typeof summaryQuery.data?.rejectedPercentage === 'number'
-                  ? `${Math.round(summaryQuery.data!.rejectedPercentage)}%`
-                  : '-'}
-              </Typography>
-            )}
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ p: 2, minHeight: 94 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Ср. время
-            </Typography>
-            {summaryQuery.isLoading ? (
-              <Skeleton width={90} height={36} />
-            ) : summaryQuery.isError ? (
-              <Typography color="error">—</Typography>
-            ) : (
-              <Typography variant="h5" sx={{ mt: 1 }}>
-                {formatTime(summaryQuery.data?.averageReviewTime)}
-              </Typography>
-            )}
-          </Card>
-        </Grid>
+              {summaryQuery.isLoading ? (
+                <Skeleton width={90} height={36} />
+              ) : summaryQuery.isError ? (
+                <Typography color="error">—</Typography>
+              ) : (
+                <Typography variant="h5" sx={{ mt: 1 }}>
+                  {key === 'totalReviewed' ? summaryQuery.data?.totalReviewed ?? 0
+                    : key === 'approvedPercentage' ? (typeof summaryQuery.data?.approvedPercentage === 'number' ? `${Math.round(summaryQuery.data.approvedPercentage)}%` : '-')
+                    : key === 'rejectedPercentage' ? (typeof summaryQuery.data?.rejectedPercentage === 'number' ? `${Math.round(summaryQuery.data.rejectedPercentage)}%` : '-')
+                    : formatTime(summaryQuery.data?.averageReviewTime)
+                  }
+                </Typography>
+              )}
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
-      {/* Activity chart */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+      <Paper variant="outlined" className={styles.chartPaper}>
+        <Typography className={styles.chartTitle}>
           График активности ({period === 'week' ? '7 дней' : period === 'month' ? '30 дней' : 'Сегодня'})
         </Typography>
-
-        <Box sx={{ width: '100%', height: 220 }}>
-          {activityQuery.isLoading ? (
-            <Skeleton variant="rectangular" width="100%" height={220} />
-          ) : activityQuery.isError ? (
-            <Typography color="error">Ошибка загрузки данных активности</Typography>
-          ) : Array.isArray(activityChartData) && activityChartData.length > 0 ? (
+        <Box className={styles.chartBox}>
+          {activityQuery.isLoading ? <Skeleton variant="rectangular" width="100%" height={220} /> :
+           activityQuery.isError ? <Typography color="error">Ошибка загрузки данных активности</Typography> :
+           activityChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={activityChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -305,68 +177,22 @@ export default function StatsPage(): React.ReactElement {
                 <Bar dataKey="rejected" stackId="a" fill={COLORS.rejected} />
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <Typography color="text.secondary">Нет данных</Typography>
-          )}
+          ) : <Typography color="text.secondary">Нет данных</Typography>}
         </Box>
       </Paper>
 
-      {/* Decisions pie + categories bar */}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 2,
-              borderRadius: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
-                mb: 2, 
-                fontWeight: 600 
-              }}
-            >
-              Распределение решений
-            </Typography>
-
-            <Box
-              sx={{
-                width: '100%',
-                height: 240,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pt: 1,   // чуть опустить сверху
-                pb: 2,   // чуть поднять снизу
-              }}
-            >
+          <Paper elevation={2} className={styles.piePaper}>
+            <Typography className={styles.chartTitle}>Распределение решений</Typography>
+            <Box className={styles.pieChartBox}>
               <PieChart width={260} height={240}>
-                <Pie
-                  data={decisionsChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={false}        // отключаем подписи
-                  isAnimationActive={false}
-                >
+                <Pie data={decisionsChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={false} isAnimationActive={false}>
                   {decisionsChartData.map((entry) => {
-                    if (entry.key === 'approved')
-                      return <Cell key={entry.name} fill={COLORS.approved} />;
-
-                    if (entry.key === 'rejected')
-                      return <Cell key={entry.name} fill={COLORS.rejected} />;
-
-                    return <Cell key={entry.name} fill={COLORS.requestChanges} />;
+                    const color = entry.key === 'approved' ? COLORS.approved : entry.key === 'rejected' ? COLORS.rejected : COLORS.requestChanges;
+                    return <Cell key={entry.name} fill={color} />;
                   })}
                 </Pie>
-
                 <Tooltip />
               </PieChart>
             </Box>
@@ -374,29 +200,21 @@ export default function StatsPage(): React.ReactElement {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-              Категории объявлений
-            </Typography>
-
-            <Box sx={{ width: '100%', height: 240 }}>
-              {categoriesQuery.isLoading ? (
-                <Skeleton variant="rectangular" width="100%" height={200} />
-              ) : categoriesQuery.isError ? (
-                <Typography color="error">Ошибка загрузки</Typography>
-              ) : categoriesChartData.length === 0 ? (
-                <Typography color="text.secondary">Нет данных</Typography>
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={categoriesChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" tick={false} axisLine={false} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill={theme.palette.primary.main} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+          <Paper variant="outlined" className={styles.barPaper}>
+            <Typography className={styles.chartTitle}>Категории объявлений</Typography>
+            <Box style={{ width: '100%', height: 240 }}>
+              {categoriesQuery.isLoading ? <Skeleton variant="rectangular" width="100%" height={200} /> :
+               categoriesQuery.isError ? <Typography color="error">Ошибка загрузки</Typography> :
+               categoriesChartData.length === 0 ? <Typography color="text.secondary">Нет данных</Typography> :
+               <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={categoriesChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="category" tick={false} axisLine={false} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={theme.palette.primary.main} />
+                </BarChart>
+               </ResponsiveContainer>}
             </Box>
           </Paper>
         </Grid>

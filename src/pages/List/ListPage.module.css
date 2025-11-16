@@ -1,0 +1,31 @@
+.container {
+  width: 100%;
+  max-width: 1050px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bulkActionsWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.adsList {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.paginationWrapper {
+  text-align: center;
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.totalItems {
+  margin-top: 8px;
+  display: block;
+  font-weight: 500;
+}

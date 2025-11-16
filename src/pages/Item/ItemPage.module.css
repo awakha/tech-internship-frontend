@@ -1,0 +1,71 @@
+.container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.galleryPaper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mainImg {
+  width: 100%;
+  max-width: 560px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f3f3f3;
+}
+
+.thumb {
+  width: 88px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #e0e0e0;
+}
+
+.thumbSelected {
+  border: 2px solid #1976d2;
+}
+
+.infoPaper {
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.fullDescPaper {
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.actionsBox {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.bottomNavBox {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  gap: 12px;
+}
+
+.rightCard {
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.labelCell {
+  font-weight: 600;
+  border-bottom: none;
+  width: 180px;
+}

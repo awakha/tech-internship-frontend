@@ -48,7 +48,7 @@ export default function AdsFilters({ filters, onChange }: any) {
   const searchRef = useRef<HTMLInputElement>(null);
   const timer = useRef<any>(null);
 
-  // авто-применение фильтров
+  // авто применение фильтров
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
     console.log('applyFilters ->', {
@@ -125,17 +125,17 @@ export default function AdsFilters({ filters, onChange }: any) {
         Поиск и фильтрация
       </Typography>
 
-      {/* Поиск */}
+
       <TextField
         fullWidth
-        placeholder={search ? '' : 'Поиск по названию'} // исчезает при вводе
+        placeholder={search ? '' : 'Поиск по названию'} 
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         inputRef={searchRef}
         sx={{ mb: 3 }}
       />
 
-      {/* Статус и Приоритет */}
+
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
         <FormControl fullWidth>
           <InputLabel>Статус</InputLabel>
@@ -172,7 +172,7 @@ export default function AdsFilters({ filters, onChange }: any) {
         </FormControl>
       </Box>
 
-      {/* Категория */}
+
       <FormControl fullWidth sx={{ mb: 3 }}>
         <InputLabel>Категория</InputLabel>
         <Select
@@ -190,7 +190,6 @@ export default function AdsFilters({ filters, onChange }: any) {
         </Select>
       </FormControl>
 
-      {/* Цена */}
       <Typography sx={{ mb: 1, fontWeight: 500 }}>Цена</Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
         <TextField
@@ -213,7 +212,6 @@ export default function AdsFilters({ filters, onChange }: any) {
         />
       </Box>
 
-      {/* Сброс */}
       <Button fullWidth variant="contained" onClick={clearAll} sx={{ py: 1.3 }}>
         Сбросить фильтры
       </Button>

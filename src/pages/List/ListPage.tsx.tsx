@@ -1,4 +1,3 @@
-// src/features/ads/AdsListPage.tsx
 import React, { useEffect, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import queryString from 'query-string';
@@ -13,6 +12,7 @@ import BulkActionsBar from '../../components/BulkActionsBar';
 import Loader from '../../components/Loader';
 import { useAppDispatch } from '../../app/hooks';
 import { setSelection } from '../../app/store';
+import styles from './ListPage.module.css';
 
 const PAGE_LIMIT = 10;
 
@@ -23,7 +23,6 @@ export default function AdsListPage() {
 
   const parsed = queryString.parse(location.search, { arrayFormat: 'bracket' });
 
-  // 🔹 Приводим все фильтры к string | string[] | undefined
   const filters = {
     page: Number(parsed.page ?? 1),
     limit: PAGE_LIMIT,
@@ -45,7 +44,6 @@ export default function AdsListPage() {
       skipEmptyString: true,
       arrayFormat: 'bracket',
     });
-
     navigate({ pathname: '/list', search: `?${qs}` });
   };
 
@@ -58,17 +56,15 @@ export default function AdsListPage() {
     queryFn: ({ signal }) => getAds(filters, signal),
   });
 
-  // 🔹 Клиентская фильтрация по priority
   const filteredAds = useMemo(() => {
     if (!filters.priority) return data?.ads ?? [];
-    // filters.priority может быть string или string[]
     const priorities = Array.isArray(filters.priority) ? filters.priority : [filters.priority];
     return data?.ads?.filter((ad: any) => priorities.includes(ad.priority)) ?? [];
   }, [data?.ads, filters.priority]);
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1050, mx: 'auto' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+    <Box className={styles.container}>
+      <Box className={styles.bulkActionsWrapper}>
         <BulkActionsBar onRefresh={() => refetch()} />
       </Box>
 
@@ -98,22 +94,19 @@ export default function AdsListPage() {
 
       {!isLoading && (
         <>
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box className={styles.adsList}>
             {filteredAds.map((ad: any) => (
               <AdCard key={ad.id} ad={ad} />
             ))}
           </Box>
 
-          <Box sx={{ textAlign: 'center', mt: 3, mb: 4 }}>
+          <Box className={styles.paginationWrapper}>
             <Pagination
               current={data?.pagination?.currentPage ?? 1}
               totalPages={data?.pagination?.totalPages ?? 1}
               onChange={(p) => updateUrl({ ...filters, page: p })}
             />
-            <Typography
-              variant="body2"
-              sx={{ mt: 1, display: 'block', fontWeight: 500 }}
-            >
+            <Typography className={styles.totalItems}>
               Всего: {data?.pagination?.totalItems ?? 0}
             </Typography>
           </Box>

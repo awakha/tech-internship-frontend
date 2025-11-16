@@ -12,14 +12,14 @@ export default function Header() {
   const navigate = useNavigate();
   const selectedCount = useAppSelector(s => (s as any).ui.selectedAds.length);
 
-  // global hotkeys: / focus search (we will emit custom event)
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === '/') {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent('focus-search'));
       }
-      // other global keys are handled inside AdDetailPage and AdsListPage
+
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
